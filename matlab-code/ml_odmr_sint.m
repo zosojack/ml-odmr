@@ -5,7 +5,7 @@ clear all; clc;
 % =========================================================================
 N_spectra = 10000;         % Numero di spettri da generare
 B_min = 0.0;               % Limite inferiore campo magnetico (mT)
-B_max = 8.;              % Limite superiore campo magnetico (mT)
+B_max = 8.;                % Limite superiore campo magnetico (mT)
 
 % Angoli ottimali trovati
 alpha_deg = 36.1;        
@@ -26,7 +26,7 @@ Exp.mwRange = [2.5 3.3];     % Range in GHz
 Exp.Harmonic = 0;
 Exp.CrystalSymmetry = 227;
 Opt.Sites = [];
-Exp.nPoints = 750;           % Risoluzione asse X
+Exp.nPoints = 800;           % Risoluzione asse X
 
 % Configurazione geometrica corretta per i 4 siti NV
 Exp.MolFrame = [0, acos(1/sqrt(3)), 0];
@@ -75,7 +75,7 @@ end
 % SALVATAGGIO FILE .MAT
 % =========================================================================
 % Genera il nome del file dinamicamente in base a N_spectra
-nome_file = sprintf('odmr_dataset_%d.mat', N_spectra);
+nome_file = sprintf('~/ml-odmr/matlab-code/odmr_dataset_%d.mat', N_spectra);
 
 save(nome_file, 'spectra_data', 'B_labels', 'mw_freqs');
 

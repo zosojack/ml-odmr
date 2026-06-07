@@ -10,7 +10,7 @@ X_spectra = mat_contents['spectra_data']  # Array di shape (n, 1024)
 y_B_field = mat_contents['B_labels'].flatten()  # Array di shape (n,)
 x_axis = mat_contents['mw_freqs'].flatten() # Le frequenze (se ti servono per plottare)
 
-separate = False
+separate = True
 
 # 3. Salviamo in formato binario compresso nativo di Numpy
 if separate:
