@@ -1,0 +1,15 @@
+## **Se il tempo computazionale non subisce troppo l'aumento del numero dei punti, perché Yao decide di usarne soltanto 101?**
+
+La scelta di Yao et al. di usare esattamente 101 punti non dipende da limiti della rete convoluzionale, ma da precisi vincoli legati al **setup sperimentale e all'hardware di acquisizione**:
+
+* **Tempo di acquisizione e fototossicità / drift termico:** Una delle applicazioni cardine del paper è la termometria intracellulare in tempo reale su cellule vive (Fig. 3). Nelle misure ODMR a scansione di frequenza, per ogni singolo punto di frequenza il generatore MW deve commutare e la fotocamera o l'APd deve integrare i fotoni per un certo dwell-time. Misurare 101 punti richiede una frazione del tempo rispetto a misurarne centinaia: ridurre i punti al minimo indispensabile velocizza il frame-rate, limita il riscaldamento laser e riduce il fotodanneggiamento biologico.
+
+* **Widefield ODMR Imaging su telecamera (pixel-by-pixel):** Nella nanometrologia quantistica a largo campo (widefield imaging), non si misura un solo spettro, ma un'immagine in cui **ogni singolo pixel** contiene uno spettro ODMR (decine di migliaia di spettri simultanei per frame). Aumentare il numero di punti di frequenza aumenta direttamente la dimensione dei cube-array di dati e il tempo di scansione per ricostruire una singola immagine di campo magnetico o temperatura.
+
+* **Campioni purificati e assenza di satelliti iperfini:** A differenza del diamante che hai usato in laboratorio (un cristallo *bulk* con abbondanza isotopica naturale del nucleo di $^{13}\text{C}$ all'1.1%), in gran parte delle nanotecnologie quantistiche e nei nanodiamanti per biosensing si usano substrati arricchiti isotopicamente in $^{12}\text{C}$ (che ha spin nucleare nullo $I=0$) oppure si lavora con concentrazioni tali per cui solo l'1% dei centri NV ha un $^{13}\text{C}$ nel primo guscio. Nei loro spettri sperimentali (come mostrato nelle figure del paper) non ci sono i satelliti a $\pm 65\text{ MHz}$, ma solo i due dip centrali.
+
+* **Teorema del campionamento applicato alle loro larghezze di riga:** Con uno sweep di $120\text{ MHz}$ su 101 punti, il passo spettrale è di circa $1.2\text{ MHz}$. Poiché nei nanodiamanti e negli ensemble la larghezza di riga tipica è di $\Gamma \approx 6 - 10\text{ MHz}$, un picco copre tra i 5 e gli 8 punti di campionamento discreti. Per un algoritmo di regressione statistica o di fit, 6–8 campioni su una curva lorentziana sono più che sufficienti a vincolare il minimo e l'ampiezza senza richiedere sovracampionamento.
+
+## **Noi scegliamo di allargare l'intervallo, ad includere anche l'interazione iperfine col carbonio 12.**
+ La separazione tipica dei dip dovuti all'iperfine col carbonio è $127\text{ MHz}$. Per poterla vedere, dobbiamo ampliare lo sweep rispetto a quello di Yao!
+ L'intervallo passa da $[2.8, 2.92] \text{GHz}$ - quindi $120\text{ MHz}$ - a $[2.75, 2.95] \text{GHz}$, perciò $200\text{ MHz}$. Per mantenere la stessa risoluzione di $1.2\text{ MHz/punto}$ occorre usare circa 167 punti! 
