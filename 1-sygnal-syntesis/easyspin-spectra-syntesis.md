@@ -6,9 +6,9 @@
 Centers in Diamond | **Yao et al.**](https://arxiv.org/abs/2603.14728v1)
 
 ## 1. Motivazione Fisica e Scelte Modellistiche
-    Per addestrare e validare l'architettura 1D-CNN proposta da Yao et al., la generazione dei dati sintetici viene effettuata risolvendo direttamente l'Hamiltoniana di spin dei centri NV (*Nitrogen-Vacancy*) in diamante tramite il toolbox EasySpin. Questo approccio sostituisce il modello puramente fenomenologico a due lorentziane con una simulazione quantistica coerente con i dati sperimentali di un cristallo di diamante macroscopico (*bulk*) ($D=2.87\ \text{GHz}$, $E=10\ \text{MHz}$, $\gamma=28\ \text{GHz T}^{-1}$).
+Per addestrare e validare l'architettura 1D-CNN proposta da Yao et al., la generazione dei dati sintetici viene effettuata risolvendo direttamente l'Hamiltoniana di spin dei centri NV (*Nitrogen-Vacancy*) in diamante tramite il toolbox EasySpin. Questo approccio sostituisce il modello puramente fenomenologico a due lorentziane con una simulazione quantistica coerente con i dati sperimentali di un cristallo di diamante macroscopico (*bulk*) ($D=2.87\ \text{GHz}$, $E=10\ \text{MHz}$, $\gamma=28\ \text{GHz T}^{-1}$).
 
-    Le scelte adottate nella simulazione derivano dai seguenti vincoli fisici e modellistici:
+Le scelte adottate nella simulazione derivano dai seguenti vincoli fisici e modellistici:
 
 * **Inclusione della Simmetria Cristallina a 4 Assi:** 
     A differenza di modelli giocattolo monoassiali, la simulazione implementa il gruppo spaziale del diamante (`CrystalSymmetry = 227`) popolando le 4 classi di orientazione tetraedriche $\langle 111 \rangle$ regolate dalla terna di angoli di Eulero scelta semi-arbitrariamente in base alle osservazioni in laboratorio ($\alpha = 36.1^\circ, \beta = 42.39^\circ, \gamma = 0.61^\circ$). Nel regime di campo magnetico statico debole indagato ($B \le 0.237\ \text{mT}$), i dip delle diverse classi non si separano in 8 rami distinti ma si sovrappongono in due macro-strutture di risonanza allargate, riproducendo la risposta asimmetrica e convoluta del cristallo reale.

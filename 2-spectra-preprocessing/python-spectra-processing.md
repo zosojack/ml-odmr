@@ -36,31 +36,34 @@ Centers in Diamond | **Yao et al.**](https://arxiv.org/abs/2603.14728v1)
 
 ## 3. Trasformazione dello Spettro e Modello di Rumore
 
-Ciascun profilo di assorbimento $y \in [0, 1]$ campionato su $167$ punti subisce la pipeline di corruzione stocastica:
+Ciascun profilo di assorbimento $y \in [0, 1]$ campionato su $167$ punti è sottoposto alle seguenti manipolazioni:
 
 1. **Modulazione del Contrasto Ottico:**
-   Viene campionato un contrasto casuale $C \sim \mathcal{U}(0.012, 0.15)$ per modellare la caduta di fotoluminescenza attorno al livello di emissione di base:
+   Viene campionato un contrasto casuale $C \sim \mathcal{U}(0.012, 0.15)$ che determina la profondità dei *dip* rispetto al livello di emissione di base:
    $$I_{\text{ideal}}(\nu) = 1 - C \cdot y(\nu)$$
 
 2. **Shot Noise Poissoniano:**
-   Viene estratto un budget totale di fotoni integrati $N_{\text{tot}} \sim \mathcal{U}(1.8 \times 10^5, 3.6 \times 10^6)$ per coprire un ampio intervallo di rapporti segnale-rumore (SNR). Il numero medio atteso di fotoni per ciascuno dei $167$ canali spettrali vale:
+   Viene estratto un budget totale di fotoni integrati,  $N_{\text{tot}} \sim \mathcal{U}(3 \times 10^5, 6 \times 10^6)$ per coprire un ampio intervallo di rapporti segnale-rumore (SNR). Gli estremi dell'intervallo sono ottenuti a partire da quelli usato da Yao et al.; l'intervallo è stato ri-scalato in seguito all'ingrandimento della finestra di sweep, con l'obiettivo di mantenere la medesima la densità di fotoni per punto (vedere [Quanti fotoni simulare?](/0-FAQ/quanti-fotoni-simulare.md)). 
+   Il valor medio di fotoni (attesi) in ciascuno dei $167$ canali spettrali è dato dalla frazione d'intensità del bin stesso sul totale:
+
    $$\lambda_i = N_{\text{tot}} \cdot \frac{I_{\text{ideal}}(\nu_i)}{\sum_{j=1}^{167} I_{\text{ideal}}(\nu_j)}$$
-   Il conteggio di fotoni osservato per ciascun bin viene campionato indipendentemente:
+
+   Il conteggio di fotoni osservato per ciascun bin viene quindi campionato indipendentemente da una Poissoniana con media $\lambda_i$:
    $$N_{\text{obs}}(\nu_i) \sim \text{Poisson}(\lambda_i)$$
 
 3. **Standardizzazione Z-score:**
-   Il vettore rumoroso $N_{\text{obs}}$ viene centrato e normalizzato rispetto alla propria media e deviazione standard empiriche calcolate sui $167$ punti:
+   Il vettore rumoroso $N_{\text{obs}}$ viene centrato e normalizzato rispetto alla propria media e deviazione standard:
    $$I_{\text{norm}}(\nu_i) = \frac{N_{\text{obs}}(\nu_i) - \mu}{\sigma}$$
-   Questa operazione rende il segnale invariante rispetto alla potenza del laser di eccitazione, all'efficienza di raccolta ottica e alle fluttuazioni di offset statico.
+   Questa operazione rende il segnale invariante rispetto alla potenza del laser di eccitazione, all'efficienza di raccolta ottica e agli offset sistematici.
 
 ---
 
 ## 4. Architettura del Dataset e Strategia di Implementazione
 
 * **Dataset PyTorch (`torch.utils.data.Dataset`):** 
-Mantiene in RAM la matrice grezza $[10\,000 \times 167]$ prodotta da EasySpin e applica on-the-fly contrasto, shot noise e Z-score all'interno del metodo `__getitem__`. Questa strategia garantisce che la rete veda a ogni epoca una realizzazione di rumore statisticamente indipendente, fungendo da regolarizzazione implicita contro l'overfitting.
+Mantiene in RAM la matrice grezza $[10\,000 \times 167]$ degli spettri prodotti da EasySpin e applica on-the-fly contrasto, shot noise e Z-score all'interno del metodo `__getitem__`. Questa strategia garantisce che la rete veda a ogni epoca una realizzazione di rumore statisticamente indipendente, fungendo da "regolarizzazione implicita" contro l'overfitting.
 
-* **Forma dei Tensori di Input:** Ciascun campione di input ha dimensione tensoriale $[1, 167]$ (canale singolo, 167 feature spaziali/frequenze).
+* **Forma dei Tensori di Input:** Ciascun campione di input ha dimensione tensoriale $[1, 167]$: singolo canale, 167 feature spaziali (= frequenze).
 
 * **Partizionamento dei Dati:** Suddivisione deterministica (fissando il seed a 42) in:
   * **Training set (80%):** 8.000 spettri con generazione stocastica del rumore ad ogni epoca.

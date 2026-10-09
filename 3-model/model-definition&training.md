@@ -7,15 +7,18 @@
 [A Deep-Learning-Boosted Framework for Quantum Sensing with Nitrogen-Vacancy
 Centers in Diamond | **Yao et al.**](https://arxiv.org/abs/2603.14728v1)
 
-* **Architettura della rete:** Progettare la 1D-CNN in PyTorch (blocchi convoluzionali con BatchNorm/ReLU e layer lineari terminali) tarata sull'input a 101 punti.
-* **Output probabilistico:** Far predire alla rete per ciascun parametro target (es. $c$ ed $s$) sia il valore atteso $\hat{\mu}$ sia la varianza $\hat{\sigma}^2$ (o $\log \sigma^2$ per stabilità numerica).
-* **Negative Log-Likelihood (NLL) Loss:** Implementare la funzione di costo gaussiana:
+* **Architettura della rete:** 
+    Progettare la 1D-CNN in PyTorch (blocchi convoluzionali con BatchNorm/ReLU e layer lineari terminali) tarata sull'input a 167 punti.
 
-$$\mathcal{L} = \frac{1}{2} \sum \left( \frac{(y - \hat{\mu})^2}{\hat{\sigma}^2} + \ln \hat{\sigma}^2 \right)$$
+* **Output probabilistico:** 
+    Far predire alla rete per ciascun parametro target (es. $c$ ed $s$) sia il valore atteso $\hat{\mu}$ sia la varianza $\hat{\sigma}^2$ (o $\log \sigma^2$ per stabilità numerica).
 
+* **Negative Log-Likelihood (NLL) Loss:** 
+    Implementare la funzione di costo gaussiana:
 
+    $$\mathcal{L} = \frac{1}{2} \sum \left( \frac{(y - \hat{\mu})^2}{\hat{\sigma}^2} + \ln \hat{\sigma}^2 \right)$$
 
-che consente alla rete di quantificare l'incertezza statistica (aleatoria) legata al livello di rumore del singolo spettro.
+    che consente alla rete di quantificare l'incertezza statistica (aleatoria) legata al livello di rumore del singolo spettro.
 
 ---
 
