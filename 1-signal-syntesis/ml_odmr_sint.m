@@ -3,7 +3,7 @@ clear all; clc;
 % =========================================================================
 % CONFIGURAZIONE DISTRIBUZIONI FISICHE (SCALA ORIGINARIA DI YAO ET AL.)
 % =========================================================================
-N_spectra = 10000;
+N_spectra = 50000;
 
 % Finestra di riferimento di Yao (usata esclusivamente per la mappa dei parametri fisici)
 ref_mw_min_GHz = 2.80;
@@ -73,40 +73,48 @@ for i = 1:N_spectra
     s_rand = s_min + rand() * (s_max - s_min);
     w_rand = w_min + rand() * (w_max - w_min);
     
-    % 2. Mappatura nelle grandezze fisiche (ancorata ai 120 MHz di riferimento)
+    % 2. Mappatura nelle grandezze fisiche (scala di riferimento 120 MHz)
     D_MHz = (ref_mw_min_GHz * 1e3) + c_rand * ref_mw_range_MHz;
     delta_MHz = s_rand * ref_mw_range_MHz;
-    
-    % Campo magnetico ricavato analiticamente
     B_mT = (1 / gamma_MHz_mT) * sqrt((delta_MHz / 2)^2 - E_MHz^2);
-    lw_MHz = w_rand * ref_mw_range_MHz;
+    
+    % Correzione HWHM -> FWHM (fattore 2 per EasySpin)
+    fwhm_MHz = 2 * w_rand * ref_mw_range_MHz; 
     
     % 3. Assegnazione a EasySpin
     Sys.D = [D_MHz, E_MHz];
-    Sys.lw = [0, lw_MHz];
+    Sys.lw = [0, fwhm_MHz];
     Exp.Field = B_mT;
     
-    % 4. Simulazione dello spettro con simmetria a 4 siti
+    % 4. Simulazione dello spettro
     [freqs, y] = pepper(Sys, Exp, Opt);
     
     if max(y) > 0
         y = y / max(y);
     end
     
-    % 5. Salvataggio
+    % 5. Riproiezione coerente di c ed s sulla finestra effettiva di sweep (2.75 - 2.95 GHz)
+    % mw_range_eff = 200 MHz
+    mw_range_eff_MHz = (mw_max_GHz - mw_min_GHz) * 1e3;
+    nu_minus = D_MHz - delta_MHz / 2;
+    nu_plus  = D_MHz + delta_MHz / 2;
+    
+    x1_eff = (nu_minus - mw_min_GHz * 1e3) / mw_range_eff_MHz;
+    x2_eff = (nu_plus  - mw_min_GHz * 1e3) / mw_range_eff_MHz;
+    
+    c_eff = (x1_eff + x2_eff) / 2;
+    s_eff = x2_eff - x1_eff;
+    
+    % Salvataggio
     spectra_data(i, :) = y;
-    labels_B(i) = B_mT;
-    labels_D(i) = D_MHz;
-    labels_lw(i) = lw_MHz;
-    labels_c(i) = c_rand;
-    labels_s(i) = s_rand;
+    labels_B(i)  = B_mT;
+    labels_D(i)  = D_MHz;
+    labels_lw(i) = fwhm_MHz;
+    labels_c(i)  = c_eff;       % Normalizzato in [0, 1] sui 200 MHz effettivi
+    labels_s(i)  = s_eff;       % Normalizzato in [0, 1] sui 200 MHz effettivi
     
     if i == 1
         mw_freqs = freqs;
-    end
-    
-    if mod(i, 500) == 0
-        fprintf('Completati %d/%d spettri\n', i, N_spectra);
     end
 end
 

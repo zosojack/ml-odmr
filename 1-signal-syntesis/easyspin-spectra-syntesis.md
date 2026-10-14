@@ -49,3 +49,8 @@ I dati vengono esportati in formato MATLAB `.mat` compatibile con HDF5 (`-v7.3`)
 * `labels_c`: Vettore $[N \times 1]$ dei centri normalizzati adimensionali $c \in [0.35, 0.65]$;
 * `labels_s`: Vettore $[N \times 1]$ degli splitting normalizzati adimensionali $s \in [0.1667, 0.20]$;
 * `mw_freqs`: Vettore $[1 \times 167]$ con l'asse delle frequenze fisiche dello sweep espresse in $\text{GHz}$.##
+
+
+## 3. Estrazione delle labels reali
+
+EasySpin produce un segnale molto più elaborato di una semplice somma di lorentziane. Per questo motivo, anche se $c$ ed $s$ sono utilizzati per impostare la simulazione, i dip finali potrebbero non cadere esattamente in $c-s$ e $c+s$. Le labels vengono pertanto aggiornate *dopo* la generazione degli spettri nel notebook [c-&-s-correction.ipynb](/1-signal-syntesis/c-&-s-correction.ipynb), eseguendo un fit sul segnale perfettamente pulito prodotto dal codice MatLAB.
