@@ -1,5 +1,8 @@
 .vscode/
 
+# vecchi dati
+z-old-project/old-data/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -7,9 +10,6 @@ __pycache__/
 
 # C extensions
 *.so
-
-# Matlab files (too large)
-*.mat
 
 # Distribution / packaging
 .Python
