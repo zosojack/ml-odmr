@@ -3,7 +3,7 @@ clear all; clc;
 % =========================================================================
 % CONFIGURAZIONE DISTRIBUZIONI FISICHE (SCALA ORIGINARIA DI YAO ET AL.)
 % =========================================================================
-N_spectra = 50000;
+N_spectra = 10000;
 
 % Finestra di riferimento di Yao (usata esclusivamente per la mappa dei parametri fisici)
 ref_mw_min_GHz = 2.80;
@@ -33,7 +33,9 @@ w_max = 0.09;
 mw_min_GHz = 2.75;
 mw_max_GHz = 2.95;
 Exp.mwRange = [mw_min_GHz, mw_max_GHz]; 
-Exp.nPoints = 167;                     % 167 punti -> ~1.20 MHz/punto
+N_points = 334+1
+Exp.nPoints = N_points; % 167 punti -> ~1.20 MHz/punto
+% 334 raddoppio + 1 per simmetria 
 Exp.Harmonic = 0;
 
 % Angoli di Eulero del campione determinati in laboratorio (gradi -> radianti)
@@ -62,7 +64,7 @@ labels_c = zeros(N_spectra, 1);
 labels_s = zeros(N_spectra, 1);
 mw_freqs = zeros(1, Exp.nPoints);
 
-fprintf('Generazione di %d spettri bulk con EasySpin (167 punti, 4 siti NV)...\n', N_spectra);
+fprintf('Generazione di %d spettri bulk con EasySpin (%d punti, 4 siti NV)...\n', N_points, N_spectra);
 
 % =========================================================================
 % LOOP DI GENERAZIONE

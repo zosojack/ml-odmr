@@ -62,9 +62,7 @@ Il confronto deve quantificare l'errore di stima di $[c, s]$ al variare del rapp
 
 ### 4. L'analisi in funzione del rumore (il benchmark vero)
 
-Per quanto riguarda l'analisi sperimentale, la tua intuizione è esatta al 100%: l'obiettivo del confronto è dimostrare **dove e perché** il fit classico crolla rispetto alla rete neurale.
-
-Il piano d'azione standard è proprio quello che hai descritto:
+L'obiettivo del confronto è dimostrare **dove e perché** il fit classico crolla rispetto alla rete neurale.
 
 1. **Grafico dell'Errore (MAE o RMSE) vs Budget di Fotoni ($N_{\text{tot}}$):**
 * Sull'asse $X$: il numero di fotoni $N_{\text{tot}}$ (da $10^5$ a $6 \times 10^6$ in scala logaritmica), che rappresenta direttamente l'SNR e il tempo di dwell.
@@ -73,15 +71,8 @@ Il piano d'azione standard è proprio quello che hai descritto:
 * A $N_{\text{tot}} \sim 10^6$ (alto SNR), fit classico e 1D-CNN hanno prestazioni quasi identiche (entrambi ottimi).
 * Sotto $N_{\text{tot}} \sim 5 \times 10^5$ (basso SNR), la curva dell'errore del fit classico si impenna verso l'alto (divergenza), mentre la CNN degrada in modo molto più dolce e controllato.
 
-
-
-
 2. **Grafico del Success Rate (Tasso di Successo):**
 * Si fissa una soglia di successo fisico: ad esempio un errore sullo splitting $\vert{}s_{\text{pred}} - s_{\text{true}}\vert{} < 1\text{ MHz}$ (o un valore in coordinate normalizzate).
 * Sull'asse $X$: i bin di fotoni $N_{\text{tot}}$.
 * Sull'asse $Y$: la percentuale di spettri per cui il metodo ha centrato la risonanza entro la soglia.
 * È esattamente il grafico cardine del paper di Yao: mostra che a bassissimi conteggi di fotoni il fit convenzionale ha un success rate che cola a picco verso il $20-30\%$, mentre la rete si mantiene a livelli ampiamente utilizzabili ($> 85-90\%$).
-
-
-
-Vuoi che strutturiamo prima la funzione Python per il fit Levenberg-Marquardt multi-start con `scipy.optimize.curve_fit` su un piccolo sottoinsieme di test per calibrarla, oppure preferisci prima consolidare l'addestramento della CNN?
