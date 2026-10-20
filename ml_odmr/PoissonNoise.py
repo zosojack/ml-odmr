@@ -11,8 +11,7 @@ class PoissonNoise:
         Inizializza la classe PoissonNoise.
         `seed`: seme per il generatore di numeri casuali (opzionale)
         """
-        if seed is not None:
-            np.random.seed(seed)
+        self.seed = seed
             
     def ideal_signal(
         self, 

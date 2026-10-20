@@ -1,7 +1,23 @@
 # vedere fit-monte-carlo.ipynb
+import time
+from dataclasses import dataclass
+from typing import Optional
 import numpy as np
 from numba import njit
 from scipy.optimize import curve_fit
+
+
+@dataclass
+class FitResult:
+    converged: bool  # esplicito: True o False
+    c_norm: float
+    s_norm: float
+    c_mhz: float
+    s_mhz: float
+    chi2_red: float
+    duration_sec: float
+    popt: Optional[np.ndarray] = None  # tutti i parametri ottimizzati (se servono)
+
 
 @njit
 def due_lorentziane(f, A0, A1, x1, w1, A2, x2, w2):
@@ -17,29 +33,26 @@ def due_lorentziane(f, A0, A1, x1, w1, A2, x2, w2):
     w2: semi-larghezza della seconda lorentziana (HWHM)
     """
     
-    def lorentziana(f, A, x, w):
-        return A * (w**2 / ((f - x) ** 2 + w**2))
-    
-    lorentziana1 = lorentziana(f, A1, x1, w1)
-    lorentziana2 = lorentziana(f, A2, x2, w2)
+    lorentziana1 = A1 * (w1**2 / ((f - x1) ** 2 + w1**2))
+    lorentziana2 = A2 * (w2**2 / ((f - x2) ** 2 + w2**2))
     
     return A0 - lorentziana1 - lorentziana2
 
+
 @njit
-def random_p0(A0_est, max_depth=0.15):
+def random_p0_norm(A0_est, dip_depth_est):
     """
-    Genera un vettore di parametri iniziali casuali per la funzione due_lorentziane.
-    Restituisce un array con i parametri [A0, A1, x1, w1, A2, x2, w2].
+    Genera parametri casuali p0 coerenti con lo spazio [0, 1] e Z-score.
     """
-    A0 = np.random.uniform(A0_est - 1, A0_est + 1)  # Ampiezza di offset
-    A1 = np.random.uniform(0., 2*max_depth)   # Ampiezza della lorentziana I
-    x1 = np.random.uniform(2.81, 2.86)        # Centro della lorentziana I
-    w1 = np.random.uniform(0., 1.)            # Semi-larghezza lorentziana I
-    A2 = np.random.uniform(0., 2*max_depth)   # Ampiezza della lorentziana II
-    x2 = np.random.uniform(2.86, 2.91)        # Centro della lorentziana II
-    w2 = np.random.uniform(0., 1)             # Semi-larghezza della lorentziana II
-    
-    return np.array([A0, A1, x1, w1, A2, x2, w2], dtype=np.float32)
+    A0 = np.random.uniform(A0_est - 0.5, A0_est + 0.5)
+    A1 = np.random.uniform(0.2, dip_depth_est)
+    x1 = np.random.uniform(0.30, 0.55)   # dip sinistro in coordinate [0, 1]
+    w1 = np.random.uniform(0.01, 0.05)   # HWHM tipica: 2 - 10 MHz su 200 MHz
+    A2 = np.random.uniform(0.2, dip_depth_est)
+    x2 = np.random.uniform(0.55, 0.80)   # dip destro in coordinate [0, 1]
+    w2 = np.random.uniform(0.01, 0.05)
+    return np.array([A0, A1, x1, w1, A2, x2, w2], dtype=np.float64)
+
 
 class FitMonteCarlo:
     """
@@ -55,62 +68,57 @@ class FitMonteCarlo:
         `M`: numero di tentativi di fit Monte Carlo
         """
         self.M = M
+        
     
-    def fit(
+    def fit_single(
+        self, 
         f_original: np.ndarray,
         y_original: np.ndarray
-    ) -> tuple:
-        # TODO:
-        # - aggiungere calcolo degli errori ai parametri stimati
+    ) -> FitResult:
         """
         Esegue il fit multi-start Monte Carlo su un singolo spettro rumoroso.
         Inserire le frequenze (f_original) e i valori di intensità (y_original) dello spettro; la funzione si occuperà di normalizzare le frequenze e di calcolare lo z-score dei valori di intensità.
-        Restituisce: (c_fit, s_fit, popt, chi2_red)
+        Restituisce: oggetto FitResult
         """
-        
-        # Numero di punti dati e numero di parametri della funzione
+        t_start_fit = time.perf_counter()
         N_points = len(f_original)
         n_params = 7
-        
-        # Normalizzazione delle frequenze
+
+        # Normalizzazione frequenze [0, 1]
         f_min, f_max = float(f_original.min()), float(f_original.max())
         delta_f = f_max - f_min
-        f_normalized = (f_original - f_min) / delta_f
-        
-        # z-score dei valori di intensità
+        f_norm = (f_original - f_min) / delta_f
+
+        # Standardizzazione Z-score del segnale in ampiezza
         y_mean = np.mean(y_original)
         y_std = np.std(y_original)
+        if y_std < 1e-8:
+            y_std = 1e-8
         y_zscore = (y_original - y_mean) / y_std
 
-        # Stime preliminari per circoscrivere lo spazio di ricerca
-        A0_est = np.percentile(y_zscore, 85)
-        dip_depth_est = max(A0_est - np.min(y_zscore), 0.5)
+        A0_est = float(np.percentile(y_zscore, 85))
+        dip_depth_est = float(max(A0_est - np.min(y_zscore), 0.5))
 
-        # Limiti fisici (bounds):
-        # - A: minimo 0, massimo 2.5 volte la profondità stimata del dip
-        # - f: minimo 0, massimo 0.5 | minimo 0.5, massimo 1 (range normalizzato)
-        # - w: minimo 0, massimo 0.5 (metà dell'intero range normalizzato)
-        lower = [A0_est - 2.5, 0., 0., 0., 0., 0.5, 0.]
-        upper = [A0_est + 2.5, dip_depth_est * 2.5, 0.5, 0.6, dip_depth_est * 2.5, 1., 0.5]
+        # Bounds nello spazio [0, 1] e Z-score
+        lower = [A0_est - 2.5, 0.05, 0.0, 0.005, 0.05, 0.0, 0.005]
+        upper = [A0_est + 2.5, dip_depth_est * 2.5, 1.0, 0.100, dip_depth_est * 2.5, 1.0, 0.100]
 
-        # Inizializzazione delle variabili per il miglior fit
         best_popt = None
         best_chi2 = np.inf
 
-        for _ in range(M):
-            # Campionamento Monte Carlo dei parametri di partenza (guess p0)
-            p0 = random_p0(A0_est, max_depth=dip_depth_est)
+        for _ in range(self.M):
+            p0 = random_p0_norm(A0_est, dip_depth_est)
 
             try:
                 popt, _ = curve_fit(
                     due_lorentziane,
-                    f_normalized,
+                    f_norm,
                     y_zscore,
                     p0=p0,
                     bounds=(lower, upper),
-                    maxfev=3000
+                    maxfev=2500
                 )
-                residuals = y_zscore - due_lorentziane(f_normalized, *popt)
+                residuals = y_zscore - due_lorentziane(f_norm, *popt)
                 chi2 = np.sum(residuals**2)
 
                 if chi2 < best_chi2:
@@ -119,21 +127,42 @@ class FitMonteCarlo:
             except (RuntimeError, ValueError):
                 continue
 
+        duration = time.perf_counter() - t_start_fit
+
         if best_popt is None:
-            return np.nan, np.nan, None, np.inf
+            return FitResult(
+                converged=False,
+                c_norm=np.nan,
+                s_norm=np.nan,
+                c_mhz=np.nan,
+                s_mhz=np.nan,
+                chi2_red=np.inf,
+                duration_sec=duration,
+                popt=None
+            )
 
         # Ordinamento dei dip (x1 < x2)
-        x1_fit, x2_fit = best_popt[2], best_popt[5]
-        if x1_fit > x2_fit:
-            x1_fit, x2_fit = x2_fit, x1_fit
+        x1_norm, x2_norm = sorted([best_popt[2], best_popt[5]])
 
-        # Ri-proiezione delle coordinate stimate nello spazio originale
-        x1 = (x1_fit * delta_f) + f_min
-        x2 = (x2_fit * delta_f) + f_min
-        # Calcolo della posizione centrale e della separazione dei dip
-        c = (x1 + x2) / 2.0
-        s = x2 - x1
-        # Chi-quadro ridotto
+        # Coordinate normalizzate in [0, 1] (per confronto diretto con la 1D-CNN)
+        c_norm = (x1_norm + x2_norm) / 2.0
+        s_norm = x2_norm - x1_norm
+
+        # Coordinate fisiche riconvertite (in MHz, assumendo f_original in GHz)
+        x1_phys = (f_min + x1_norm * delta_f) * 1e3
+        x2_phys = (f_min + x2_norm * delta_f) * 1e3
+        c_mhz = (x1_phys + x2_phys) / 2.0
+        s_mhz = x2_phys - x1_phys
+
         chi2_red = best_chi2 / (N_points - n_params)
         
-        return c, s, best_popt, chi2_red
+        return FitResult(
+            converged=True,
+            c_norm=c_norm,
+            s_norm=s_norm,
+            c_mhz=c_mhz,
+            s_mhz=s_mhz,
+            chi2_red=chi2_red,
+            duration_sec=duration,
+            popt=best_popt
+        )
