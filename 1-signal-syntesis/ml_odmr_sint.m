@@ -3,7 +3,7 @@ clear all; clc;
 % =========================================================================
 % CONFIGURAZIONE DISTRIBUZIONI FISICHE (SCALA ORIGINARIA DI YAO ET AL.)
 % =========================================================================
-N_spectra = 10000;
+N_spectra = 50000;
 
 % Finestra di riferimento di Yao (usata esclusivamente per la mappa dei parametri fisici)
 ref_mw_min_GHz = 2.80;
@@ -64,7 +64,7 @@ labels_c = zeros(N_spectra, 1);
 labels_s = zeros(N_spectra, 1);
 mw_freqs = zeros(1, Exp.nPoints);
 
-fprintf('Generazione di %d spettri bulk con EasySpin (%d punti, 4 siti NV)...\n', N_points, N_spectra);
+fprintf('Generazione di %d spettri bulk con EasySpin (%d punti, 4 siti NV)...\n', N_spectra, N_points);
 
 % =========================================================================
 % LOOP DI GENERAZIONE
