@@ -1,43 +1,11 @@
 # vedere fit-monte-carlo.ipynb
 import time
-from dataclasses import dataclass
-from typing import Optional
 import numpy as np
 from numba import njit
 from scipy.optimize import curve_fit
 
-
-@dataclass
-class FitResult:
-    converged: bool  # esplicito: True o False
-    c_norm: float
-    s_norm: float
-    c_mhz: float
-    s_mhz: float
-    chi2_red: float
-    duration_sec: float
-    popt: Optional[np.ndarray] = None  # tutti i parametri ottimizzati (se servono)
-
-
-@njit
-def due_lorentziane(f, A0, A1, x1, w1, A2, x2, w2):
-    """
-    Funzione che calcola la somma di due lorentziane.
-    f:  array di frequenze
-    A0: ampiezza di offset
-    A1: ampiezza della prima lorentziana
-    x1: centro della prima lorentziana
-    w1: semi-larghezza della prima lorentziana (HWHM)
-    A2: ampiezza della seconda lorentziana
-    x2: centro della seconda lorentziana
-    w2: semi-larghezza della seconda lorentziana (HWHM)
-    """
-    
-    lorentziana1 = A1 * (w1**2 / ((f - x1) ** 2 + w1**2))
-    lorentziana2 = A2 * (w2**2 / ((f - x2) ** 2 + w2**2))
-    
-    return A0 - lorentziana1 - lorentziana2
-
+from ml_odmr.functions import due_lorentziane
+from ml_odmr.FitResult import FitResult
 
 @njit
 def random_p0_norm(A0_est, dip_depth_est):
@@ -52,7 +20,6 @@ def random_p0_norm(A0_est, dip_depth_est):
     x2 = np.random.uniform(0.55, 0.80)   # dip destro in coordinate [0, 1]
     w2 = np.random.uniform(0.01, 0.05)
     return np.array([A0, A1, x1, w1, A2, x2, w2], dtype=np.float64)
-
 
 class FitMonteCarlo:
     """

@@ -1,0 +1,6 @@
+# Ambiente del modello: Python 3.12 consigliato.
+tensorflow==2.20.0
+keras==3.15.1
+numpy>=1.26,<2.6
+scipy>=1.11,<2
+h5py>=3.10,<4

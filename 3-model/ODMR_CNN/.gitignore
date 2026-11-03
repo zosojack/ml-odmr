@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.ipynb_checkpoints/
+.vscode/
+.DS_Store
+Thumbs.db
+# Dati e checkpoint si condividono separatamente dal sorgente Git.
+*.mat
+*.weights.h5
+*.keras
+artifacts/
+results/
+ODMR_CNN_con_pesi_*.zip
